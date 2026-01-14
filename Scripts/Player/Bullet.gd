@@ -2,7 +2,8 @@ extends CharacterBody2D
 
 var speed = 2000
 var direction := 0.0
-var shooter_id := 1  # ID de quem disparou
+var shooter_id := 1
+var damage = 10  # ID de quem disparou
 
 func _ready() -> void:
 	# Apenas o servidor simula a física da bala
@@ -33,7 +34,7 @@ func _handle_collision(collision: KinematicCollision2D):
 		if collider.get_multiplayer_authority() != shooter_id:
 			# Aplica dano ou lógica de hit
 			if collider.has_method("take_damage"):
-				collider.take_damage(10, shooter_id)
+				collider.take_damage(10, shooter_id, damage)
 
 # Função para inicializar a bala (chamada pelo servidor)
 func initialize(spawn_pos: Vector2, spawn_rotation: float, spawn_direction: float, owner_id: int):

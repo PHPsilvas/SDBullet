@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://bw064fuhitv7t"]
+[gd_scene load_steps=27 format=3 uid="uid://bw064fuhitv7t"]
 
 [ext_resource type="Script" uid="uid://jkgjjy3dvag8" path="res://Scripts/Player/player.gd" id="1_trstq"]
 [ext_resource type="Texture2D" uid="uid://cun7f1xit2dgl" path="res://Sprites/1 - Diego/Idle (32 x 48).png" id="2_jc8nk"]
@@ -137,10 +137,13 @@ radius = 12.0
 height = 40.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hmlm2"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
+resource_local_to_scene = true
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jpymk"]
+bg_color = Color(0.19992742, 0.23738298, 0.4741407, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0x5vh"]
-bg_color = Color(1, 0.3797178, 0.38329703, 1)
+bg_color = Color(0.3787548, 0.5081764, 0.7962637, 1)
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 2
@@ -184,13 +187,43 @@ unique_name_in_owner = true
 wait_time = 0.005
 autostart = true
 
-[node name="JetPackBar" type="ProgressBar" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="CanvasLayer/Control"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "PIRU DO CARALHO"
+
+[node name="JetPackBar" type="ProgressBar" parent="CanvasLayer/Control"]
 unique_name_in_owner = true
-visible = false
-offset_left = -12.385
-offset_top = 2.06
-offset_right = 12.615
-offset_bottom = 6.06
+layout_mode = 0
+offset_left = 7.0
+offset_top = 274.0
+offset_right = 153.385
+offset_bottom = 294.94
+theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_jpymk")
+value = 47.63
+show_percentage = false
+
+[node name="Healthbar" type="ProgressBar" parent="CanvasLayer/Control"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 7.0
+offset_top = 249.0
+offset_right = 153.385
+offset_bottom = 269.94
 theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
 theme_override_styles/fill = SubResource("StyleBoxFlat_0x5vh")
 value = 47.63

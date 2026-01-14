@@ -16,6 +16,7 @@ var target_velocity := Vector2.ZERO
 @onready var anim := $AnimatedSprite2D
 @onready var jet_pack_particle: GPUParticles2D = %JetPackParticle
 @onready var jet_pack_bar: ProgressBar = %JetPackBar
+@onready var health_bar: ProgressBar = %Healthbar
 var bullet_path = preload("res://Entities/Bullet.tscn")
 
 const JETPACK_FORCE = 20.0
@@ -23,8 +24,14 @@ const JETPACK_FUEL_MAX = 100
 const JETPACK_FUEL_COST = 1.0
 const JETPACK_MAXHEIGHT = 250
 
+
+const HEALTH_MAX = 100
+var health = HEALTH_MAX
+
 var jetpackFuel = JETPACK_FUEL_MAX
 var jetpack_active = false
+
+
 
 
 
@@ -37,6 +44,8 @@ func _ready():
 		set_physics_process(false)
 	
 	jet_pack_bar.value = jetpackFuel
+	health_bar.value = health
+	
 
 
 func _physics_process(delta):
@@ -156,7 +165,6 @@ func activate_jetpack():
 		jetpack_active = true
 		velocity.y -= JETPACK_FORCE
 		jetpackFuel -= JETPACK_FUEL_COST
-		jet_pack_bar.visible = true
 		jet_pack_bar.value -= JETPACK_FUEL_COST
 		jet_pack_particle.emitting = true
 
@@ -166,8 +174,6 @@ func _on_jet_pack_cooldown_timeout() -> void:
 		jet_pack_bar.value += JETPACK_FUEL_COST
 		jetpack_active = false
 		jet_pack_particle.emitting = false
-	if jetpackFuel >= 100:
-		jet_pack_bar.visible = false
 
 func fire():
 	# Apenas o dono pode disparar
@@ -209,10 +215,11 @@ func _spawn_bullet(pos: Vector2, rot: float, dir: float, owner_id: int):
 
 
 # OPCIONAL: Função para receber dano
-func take_damage(amount: int, attacker_id: int):
+func take_damage(amount: int, attacker_id: int, damage: int):
 	if multiplayer.is_server():
 		print("Player ", get_multiplayer_authority(), " levou ", amount, " de dano de ", attacker_id)
 		# Aqui você pode adicionar lógica de vida, morte, etc.
+		health -= damage
 
 func force_send_state():
 	if multiplayer.is_server():

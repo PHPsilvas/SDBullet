@@ -95,4 +95,4 @@ navigation_enabled = false
 script = ExtResource("3_wrm1d")
 player_scene = ExtResource("3_5a7ea")
 
-[node name="Players" parent="NetworkSpawner" instance=ExtResource("3_5a7ea")]
+[node name="Players" type="Node2D" parent="NetworkSpawner"]
