@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://cyaapbsmhefgr"]
+
+[ext_resource type="Script" uid="uid://dbcju12c1r3sh" path="res://Scripts/menu.gd" id="1_uubjt"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_uubjt")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Conexao LAN"
+
+[node name="BotaoHost" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Criar Sala
+"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="CampoIP" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+placeholder_text = "IP"
+
+[node name="BotaoJoin" type="Button" parent="VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Entrar na Sala"
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_right = 226.0
+offset_bottom = 114.0
