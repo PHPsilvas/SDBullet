@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://cyn8a66ljffjh"]
 
-[ext_resource type="Script" uid="uid://bygkqq2dhq6p7" path="res://Bullet.gd" id="1_4s4u5"]
+[ext_resource type="Script" uid="uid://bygkqq2dhq6p7" path="res://Scripts/Player/Bullet.gd" id="1_4s4u5"]
 [ext_resource type="Texture2D" uid="uid://fn7xb2p3yh7b" path="res://Sprites/Seasonal Tilesets/Seasonal Tilesets/5 - Misc. universal tiles/bullet.png" id="2_7281b"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u8st5"]

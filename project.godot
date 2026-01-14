@@ -10,13 +10,13 @@ config_version=5
 
 [application]
 
-config/name="SDBullet"
+config/name="SDBullet-teste"
 run/main_scene="uid://cyaapbsmhefgr"
 config/features=PackedStringArray("4.5", "Forward Plus")
 
 [autoload]
 
-MultiplayerManager="*res://Scripts/MultiplayerManager.gd"
+MultiplayerManager="*res://Scripts/Network/MultiplayerManager.gd"
 
 [display]
 

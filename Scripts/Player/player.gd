@@ -16,7 +16,7 @@ var target_velocity := Vector2.ZERO
 @onready var anim := $AnimatedSprite2D
 @onready var jet_pack_particle: GPUParticles2D = %JetPackParticle
 @onready var jet_pack_bar: ProgressBar = %JetPackBar
-var bullet_path = preload("res://Bullet.tscn")
+var bullet_path = preload("res://Entities/Bullet.tscn")
 
 const JETPACK_FORCE = 20.0
 const JETPACK_FUEL_MAX = 100
@@ -29,51 +29,57 @@ var jetpack_active = false
 
 
 func _ready():
-	target_position = global_position
+	# Adiciona ao grupo para detecção de colisão
+	add_to_group("player")
+	
+	# Apenas a autoridade processa física
+	if not is_multiplayer_authority():
+		set_physics_process(false)
 	
 	jet_pack_bar.value = jetpackFuel
 
 
-
-
-
 func _physics_process(delta):
-	var is_authority = multiplayer.get_unique_id() == get_multiplayer_authority()
-	var is_local_player = get_multiplayer_authority() == multiplayer.get_unique_id()
-
-	# --- LÓGICA DE ENTRADA ---
-	# Somente o jogador que controla este personagem deve ler a entrada
-	if get_multiplayer_authority() == multiplayer.get_unique_id():
+	if is_multiplayer_authority():
 		_read_input()
-		# Se for o host/dono, ele tem a entrada localmente.
-		# Se fosse um cliente, ele enviaria a entrada. Mas como o dono do
-		# objeto é o único que pode ter a autoridade, focamos em quem é local.
-		# AQUI, estamos presumindo que:
-		# - O HOST é local para SEU personagem.
-		# - O CLIENTE A é local para SEU personagem (que tem o CLIENTE A como autoridade).
 
-		# --- LÓGICA DE MOVIMENTO E SINCRONIZAÇÃO (SOMENTE A AUTORIDADE) ---
-		_apply_movement(delta) # A autoridade aplica o movimento
-		_send_state() # A autoridade envia o estado para todos
+		# Cliente envia input ao servidor
+		if not multiplayer.is_server():
+			_send_input_to_server.rpc_id(1, input_direction, input_fire, input_jump)
+
+		# Aplica movimento localmente (predição no cliente)
+		_apply_movement(delta)
+
+		# Servidor envia estado autoritativo
+		if multiplayer.is_server():
+			_send_state()
 	else:
-		# Se NÃO for a autoridade: Apenas interpola o estado recebido
+		# Outros clientes apenas interpolam
 		_apply_remote_state(delta)
 
-
-# RPC para o Dono enviar o estado para todos os outros
-func _send_state():
-	rpc("receive_state", global_position, velocity)
+func _send_input_to_server():
+	rpc_id(1, "server_receive_input", input_direction, input_fire, input_jump)
 
 
 @rpc("any_peer", "unreliable")
-func receive_state(pos: Vector2, vel: Vector2):
-	# Quem está recebendo (todos, exceto o sender)
-	if multiplayer.get_unique_id() == get_multiplayer_authority():
+func server_receive_input(dir: float, fire: bool, jump: bool):
+	# Só aceita se quem chamou é o dono deste player
+	if multiplayer.get_remote_sender_id() != get_multiplayer_authority():
 		return
 
-	target_position = pos
-	target_velocity = vel
+	input_direction = dir
+	input_fire = fire
+	input_jump = jump
 
+func _send_state():
+	rpc("receive_state", global_position, velocity)
+	
+	
+@rpc("any_peer", "unreliable")
+func receive_state(pos, vel):
+	if not multiplayer.is_server():
+		target_position = pos
+		velocity = vel
 
 # O Dono é o único que precisa da entrada
 func _read_input():
@@ -164,8 +170,50 @@ func _on_jet_pack_cooldown_timeout() -> void:
 		jet_pack_bar.visible = false
 
 func fire():
+	# Apenas o dono pode disparar
+	if not is_multiplayer_authority():
+		return
+	
+	# Calcula posição e direção do tiro
+	var bullet_spawn_pos = $AnimatedSprite2D/Node2D.global_position
+	var bullet_rotation = global_rotation
+	var bullet_direction = rotation
+	
+	# Se for servidor, cria diretamente
+	if multiplayer.is_server():
+		_spawn_bullet(bullet_spawn_pos, bullet_rotation, bullet_direction, get_multiplayer_authority())
+	else:
+		# Se for cliente, pede ao servidor
+		_request_spawn_bullet.rpc_id(1, bullet_spawn_pos, bullet_rotation, bullet_direction)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _request_spawn_bullet(pos: Vector2, rot: float, dir: float):
+	# Valida que quem enviou é o dono deste player
+	if multiplayer.get_remote_sender_id() != get_multiplayer_authority():
+		return
+	
+	# Servidor cria a bala
+	if multiplayer.is_server():
+		_spawn_bullet(pos, rot, dir, get_multiplayer_authority())
+
+
+func _spawn_bullet(pos: Vector2, rot: float, dir: float, owner_id: int):
 	var bullet = bullet_path.instantiate()
-	bullet.dir = rotation
-	bullet.pos = $AnimatedSprite2D/Node2D.global_position
-	bullet.rota = global_rotation
-	get_parent().add_child(bullet)
+	
+	# Inicializa a bala com os dados
+	bullet.initialize(pos, rot, dir, owner_id)
+	
+	# Adiciona à cena (true = replica para todos os clientes)
+	get_parent().add_child(bullet, true)
+
+
+# OPCIONAL: Função para receber dano
+func take_damage(amount: int, attacker_id: int):
+	if multiplayer.is_server():
+		print("Player ", get_multiplayer_authority(), " levou ", amount, " de dano de ", attacker_id)
+		# Aqui você pode adicionar lógica de vida, morte, etc.
+
+func force_send_state():
+	if multiplayer.is_server():
+		_send_state()

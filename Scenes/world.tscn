@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=4 uid="uid://colcomjo307hu"]
 
-[ext_resource type="PackedScene" uid="uid://bw064fuhitv7t" path="res://Entities/character_body_2d.tscn" id="1_qxrlw"]
 [ext_resource type="Texture2D" uid="uid://cso2fni0olqg6" path="res://Sprites/Seasonal Tilesets/Seasonal Tilesets/1 - Grassland/Terrain (16 x 16).png" id="2_qxrlw"]
-[ext_resource type="Script" uid="uid://cjmj7gub6d0pq" path="res://Scripts/network_spawner.gd" id="3_wrm1d"]
+[ext_resource type="PackedScene" uid="uid://bw064fuhitv7t" path="res://Entities/character_body_2d.tscn" id="3_5a7ea"]
+[ext_resource type="Script" uid="uid://cjmj7gub6d0pq" path="res://Scripts/Network/network_spawner.gd" id="3_wrm1d"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wrm1d"]
 texture = ExtResource("2_qxrlw")
@@ -93,4 +93,6 @@ navigation_enabled = false
 
 [node name="NetworkSpawner" type="Node2D" parent="."]
 script = ExtResource("3_wrm1d")
-player_scene = ExtResource("1_qxrlw")
+player_scene = ExtResource("3_5a7ea")
+
+[node name="Players" parent="NetworkSpawner" instance=ExtResource("3_5a7ea")]
