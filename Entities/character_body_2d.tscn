@@ -1,9 +1,10 @@
-[gd_scene load_steps=18 format=3 uid="uid://bw064fuhitv7t"]
+[gd_scene load_steps=26 format=3 uid="uid://bw064fuhitv7t"]
 
 [ext_resource type="Script" uid="uid://jkgjjy3dvag8" path="res://Scripts/player.gd" id="1_trstq"]
 [ext_resource type="Texture2D" uid="uid://cun7f1xit2dgl" path="res://Sprites/1 - Diego/Idle (32 x 48).png" id="2_jc8nk"]
 [ext_resource type="Texture2D" uid="uid://6wcfah6vj3im" path="res://Sprites/1 - Diego/Jump (32 x 48).png" id="3_qhxma"]
 [ext_resource type="Texture2D" uid="uid://l1egqbv1lwp3" path="res://Sprites/1 - Diego/Running (32 x 48).png" id="4_hmlm2"]
+[ext_resource type="Texture2D" uid="uid://34no5ivvw4rj" path="res://explosion-d4.png" id="5_hmlm2"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_a7045"]
 atlas = ExtResource("2_jc8nk")
@@ -100,25 +101,99 @@ animations = [{
 "speed": 20.0
 }]
 
+[sub_resource type="Gradient" id="Gradient_0x5vh"]
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_jpymk"]
+gradient = SubResource("Gradient_0x5vh")
+
+[sub_resource type="Curve" id="Curve_4hjoj"]
+_data = [Vector2(0, 0.16281891), 0.0, 0.0, 0, 0, Vector2(0.49695122, 1), 0.0, 0.0, 0, 0, Vector2(0.99695116, 0.49453217), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="CurveTexture_30sta"]
+curve = SubResource("Curve_4hjoj")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_nkss8"]
+lifetime_randomness = 0.7
+particle_flag_disable_z = true
+emission_shape_offset = Vector3(-10.11, 30.065, 0)
+emission_shape_scale = Vector3(1.5, 1, 1)
+emission_shape = 3
+emission_box_extents = Vector3(3, 1, 1)
+angle_min = -192.79999
+angle_max = 216.40001
+direction = Vector3(0, 1, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 2.0
+angular_velocity_min = -1.6093254e-05
+angular_velocity_max = -1.6093254e-05
+gravity = Vector3(0, 0, 0)
+scale_min = 0.5
+scale_curve = SubResource("CurveTexture_30sta")
+color_ramp = SubResource("GradientTexture1D_jpymk")
+
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_186t8"]
-radius = 14.0
+radius = 12.0
 height = 40.0
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hmlm2"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0x5vh"]
+bg_color = Color(1, 0.3797178, 0.38329703, 1)
+
 [node name="Player" type="CharacterBody2D"]
-position = Vector2(95, 51)
+collision_layer = 2
+collision_mask = 3
 script = ExtResource("1_trstq")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(4, -24)
 sprite_frames = SubResource("SpriteFrames_jpymk")
-animation = &"walk"
+animation = &"idle"
 autoplay = "idle"
+frame_progress = 0.74524534
+
+[node name="JetPackParticle" type="GPUParticles2D" parent="AnimatedSprite2D"]
+unique_name_in_owner = true
+position = Vector2(0, -14)
+emitting = false
+texture = ExtResource("5_hmlm2")
+speed_scale = 2.0
+explosiveness = 0.3
+randomness = 0.8
+process_material = SubResource("ParticleProcessMaterial_nkss8")
+
+[node name="Node2D" type="Node2D" parent="AnimatedSprite2D"]
+position = Vector2(13, 8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 4)
+visible = false
+position = Vector2(0, -20)
 shape = SubResource("CapsuleShape2D_186t8")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 limit_left = 0
-limit_top = 0
-limit_right = 840
+limit_right = 820
 limit_bottom = 400
+position_smoothing_enabled = true
+rotation_smoothing_enabled = true
+
+[node name="JetPackCooldown" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.005
+autostart = true
+
+[node name="JetPackBar" type="ProgressBar" parent="."]
+unique_name_in_owner = true
+visible = false
+offset_left = -12.385
+offset_top = 2.06
+offset_right = 12.615
+offset_bottom = 6.06
+theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_0x5vh")
+value = 47.63
+show_percentage = false
+
+[connection signal="timeout" from="JetPackCooldown" to="." method="_on_jet_pack_cooldown_timeout"]
