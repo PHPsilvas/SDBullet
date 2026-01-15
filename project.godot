@@ -11,12 +11,8 @@ config_version=5
 [application]
 
 config/name="SDBullet"
-run/main_scene="uid://cyaapbsmhefgr"
+run/main_scene="uid://colcomjo307hu"
 config/features=PackedStringArray("4.5", "Forward Plus")
-
-[autoload]
-
-MultiplayerManager="*res://Scripts/MultiplayerManager.gd"
 
 [display]
 

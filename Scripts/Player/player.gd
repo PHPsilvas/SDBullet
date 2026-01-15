@@ -8,6 +8,8 @@ var input_direction := 0.0
 var input_jump := false
 var input_fire := false # Vira true apenas no frame que o botão é apertado
 
+@export var facing_right := true
+
 var mira = 1
 
 var target_position := Vector2.ZERO
@@ -16,7 +18,8 @@ var target_velocity := Vector2.ZERO
 @onready var anim := $AnimatedSprite2D
 @onready var jet_pack_particle: GPUParticles2D = %JetPackParticle
 @onready var jet_pack_bar: ProgressBar = %JetPackBar
-var bullet_path = preload("res://Bullet.tscn")
+@onready var camera: Camera2D = $Camera2D
+var bullet_path = preload("res://Entities/Bullet.tscn")
 
 const JETPACK_FORCE = 20.0
 const JETPACK_FUEL_MAX = 100
@@ -26,18 +29,20 @@ const JETPACK_MAXHEIGHT = 250
 var jetpackFuel = JETPACK_FUEL_MAX
 var jetpack_active = false
 
-
-
 func _ready():
+	if is_multiplayer_authority():
+		camera.enabled = true
+	else:
+		camera.enabled = false
+	if multiplayer.has_multiplayer_peer():
+		set_physics_process(multiplayer.is_server())
+	else:
+		set_physics_process(false)
 	target_position = global_position
 	
 	jet_pack_bar.value = jetpackFuel
 
-
-
-
-
-func _physics_process(delta):
+func _process(delta):
 	var is_authority = multiplayer.get_unique_id() == get_multiplayer_authority()
 	var is_local_player = get_multiplayer_authority() == multiplayer.get_unique_id()
 
@@ -54,25 +59,6 @@ func _physics_process(delta):
 
 		# --- LÓGICA DE MOVIMENTO E SINCRONIZAÇÃO (SOMENTE A AUTORIDADE) ---
 		_apply_movement(delta) # A autoridade aplica o movimento
-		_send_state() # A autoridade envia o estado para todos
-	else:
-		# Se NÃO for a autoridade: Apenas interpola o estado recebido
-		_apply_remote_state(delta)
-
-
-# RPC para o Dono enviar o estado para todos os outros
-func _send_state():
-	rpc("receive_state", global_position, velocity)
-
-
-@rpc("any_peer", "unreliable")
-func receive_state(pos: Vector2, vel: Vector2):
-	# Quem está recebendo (todos, exceto o sender)
-	if multiplayer.get_unique_id() == get_multiplayer_authority():
-		return
-
-	target_position = pos
-	target_velocity = vel
 
 
 # O Dono é o único que precisa da entrada
@@ -83,67 +69,47 @@ func _read_input():
 
 # O Dono é o único que aplica o movimento
 func _apply_movement(delta):
-	# Seu código de movimento...
+	# Gravidade
 	if not is_on_floor():
 		velocity += get_gravity() * delta
-	
 
-		
+	# Disparo
 	if input_fire:
-		fire()
-		
+		request_fire.rpc(facing_right)
+
+	# Jetpack
 	if input_jump:
 		activate_jetpack()
 
+	# Movimento horizontal
 	if input_direction != 0:
 		velocity.x = input_direction * SPEED
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
-	
-	# Animações locais
+
+	# =========================
+	# DIREÇÃO DO SPRITE
+	# =========================
+	if input_direction > 0:
+		facing_right = true
+	elif input_direction < 0:
+		facing_right = false
+
+	anim.flip_h = not facing_right
+
+	# =========================
+	# ANIMAÇÃO
+	# =========================
 	if is_on_floor():
-		if input_direction > 0:
-			#anim.flip_h = false
-			if mira < 0:
-				self.scale.x = -1
-				mira = 1
-			anim.play("walk")
-		elif input_direction < 0:
-			#anim.flip_h = true
-			if mira > 0:
-				self.scale.x = -1
-				mira = -1
+		if input_direction != 0:
 			anim.play("walk")
 		else:
 			anim.play("idle")
 	else:
 		anim.play("jump")
-		if input_direction > 0:
-			#anim.flip_h = false
-			if mira < 0:
-				self.scale.x = -1
-				mira = 1
-		elif input_direction < 0:
-			#anim.flip_h = true
-			if mira > 0:
-				self.scale.x = -1
-				mira = -1
-	
+
 	move_and_slide()
 
-
-
-func _apply_remote_state(delta):
-	# Interpolação para suavizar o movimento recebido
-	global_position = global_position.lerp(target_position, 0.25)
-	velocity = velocity.lerp(target_velocity, 0.25)
-
-	# Animações remotas simples
-	if abs(velocity.x) > 10:
-		anim.play("walk")
-		anim.flip_h = velocity.x < 0
-	else:
-		anim.play("idle")
 
 func activate_jetpack():
 	if jetpackFuel > 0:
@@ -163,9 +129,21 @@ func _on_jet_pack_cooldown_timeout() -> void:
 	if jetpackFuel >= 100:
 		jet_pack_bar.visible = false
 
-func fire():
+@rpc("call_local")
+func request_fire(facing: bool):
+	if not multiplayer.is_server():
+		return
+
 	var bullet = bullet_path.instantiate()
-	bullet.dir = rotation
-	bullet.pos = $AnimatedSprite2D/Node2D.global_position
-	bullet.rota = global_rotation
 	get_parent().add_child(bullet)
+
+	var dir := 0.0
+	if not facing:
+		dir = PI
+
+	bullet.initialize(
+		$AnimatedSprite2D/Node2D.global_position,
+		0.0,
+		dir,
+		multiplayer.get_remote_sender_id()
+	)
