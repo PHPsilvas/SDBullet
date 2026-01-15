@@ -137,7 +137,6 @@ radius = 12.0
 height = 40.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hmlm2"]
-resource_local_to_scene = true
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jpymk"]
 bg_color = Color(0.19992742, 0.23738298, 0.4741407, 1)
@@ -182,10 +181,28 @@ limit_bottom = 400
 position_smoothing_enabled = true
 rotation_smoothing_enabled = true
 
-[node name="JetPackCooldown" type="Timer" parent="."]
+[node name="JetPackBar" type="ProgressBar" parent="."]
 unique_name_in_owner = true
-wait_time = 0.005
-autostart = true
+offset_left = -59.0
+offset_top = 7.0
+offset_right = 69.0
+offset_bottom = 15.0
+theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_jpymk")
+value = 47.63
+show_percentage = false
+metadata/_edit_use_anchors_ = true
+
+[node name="Healthbar" type="ProgressBar" parent="."]
+unique_name_in_owner = true
+offset_left = -59.0
+offset_top = 18.0
+offset_right = 69.0
+offset_bottom = 26.0
+theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
+theme_override_styles/fill = SubResource("StyleBoxFlat_0x5vh")
+value = 47.63
+show_percentage = false
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -199,34 +216,25 @@ grow_vertical = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="Label" type="Label" parent="CanvasLayer/Control"]
+[node name="Municao" type="Label" parent="CanvasLayer/Control"]
 layout_mode = 0
-offset_right = 40.0
+offset_left = 456.0
+offset_right = 499.0
 offset_bottom = 23.0
-text = "PIRU DO CARALHO"
 
-[node name="JetPackBar" type="ProgressBar" parent="CanvasLayer/Control"]
+[node name="Recarga" type="Timer" parent="."]
+wait_time = 3.0
+one_shot = true
+
+[node name="JetPackCooldown" type="Timer" parent="."]
 unique_name_in_owner = true
-layout_mode = 0
-offset_left = 7.0
-offset_top = 274.0
-offset_right = 153.385
-offset_bottom = 294.94
-theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
-theme_override_styles/fill = SubResource("StyleBoxFlat_jpymk")
-value = 47.63
-show_percentage = false
+wait_time = 0.005
+autostart = true
 
-[node name="Healthbar" type="ProgressBar" parent="CanvasLayer/Control"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 7.0
-offset_top = 249.0
-offset_right = 153.385
-offset_bottom = 269.94
-theme_override_styles/background = SubResource("StyleBoxFlat_hmlm2")
-theme_override_styles/fill = SubResource("StyleBoxFlat_0x5vh")
-value = 47.63
-show_percentage = false
+[node name="ShootCooldown" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
 
+[connection signal="timeout" from="Recarga" to="." method="_on_recarga_timeout"]
 [connection signal="timeout" from="JetPackCooldown" to="." method="_on_jet_pack_cooldown_timeout"]
+[connection signal="timeout" from="ShootCooldown" to="." method="_on_shoot_cooldown_timeout"]

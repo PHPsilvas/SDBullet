@@ -17,6 +17,9 @@ var target_velocity := Vector2.ZERO
 @onready var jet_pack_particle: GPUParticles2D = %JetPackParticle
 @onready var jet_pack_bar: ProgressBar = %JetPackBar
 @onready var health_bar: ProgressBar = %Healthbar
+@onready var shootcooldown: Timer = $ShootCooldown
+@onready var municao: Label = $CanvasLayer/Control/Municao
+@onready var recarga: Timer = $Recarga
 var bullet_path = preload("res://Entities/Bullet.tscn")
 
 const JETPACK_FORCE = 20.0
@@ -30,6 +33,10 @@ var health = HEALTH_MAX
 
 var jetpackFuel = JETPACK_FUEL_MAX
 var jetpack_active = false
+
+var firePermission = true
+var bullet = 30
+
 
 
 
@@ -94,7 +101,7 @@ func receive_state(pos, vel):
 func _read_input():
 	input_direction = Input.get_axis("ui_left", "ui_right")
 	input_jump = Input.is_action_pressed("ui_accept")
-	input_fire = Input.is_action_just_pressed("Left_mouse")
+	input_fire = Input.is_action_pressed("Left_mouse")
 
 # O Dono é o único que aplica o movimento
 func _apply_movement(delta):
@@ -104,8 +111,15 @@ func _apply_movement(delta):
 	
 
 		
-	if input_fire:
+	if input_fire and firePermission and bullet>0:
 		fire()
+		shootcooldown.start()
+		firePermission = false
+		bullet -= 1
+		municao.text = str(bullet)+"/30"
+		if bullet == 0:
+			recarga.start()
+		
 		
 	if input_jump:
 		activate_jetpack()
@@ -127,6 +141,7 @@ func _apply_movement(delta):
 			#anim.flip_h = true
 			if mira > 0:
 				self.scale.x = -1
+				
 				mira = -1
 			anim.play("walk")
 		else:
@@ -137,11 +152,13 @@ func _apply_movement(delta):
 			#anim.flip_h = false
 			if mira < 0:
 				self.scale.x = -1
+				
 				mira = 1
 		elif input_direction < 0:
 			#anim.flip_h = true
 			if mira > 0:
 				self.scale.x = -1
+				
 				mira = -1
 	
 	move_and_slide()
@@ -220,7 +237,17 @@ func take_damage(amount: int, attacker_id: int, damage: int):
 		print("Player ", get_multiplayer_authority(), " levou ", amount, " de dano de ", attacker_id)
 		# Aqui você pode adicionar lógica de vida, morte, etc.
 		health -= damage
+		health_bar.value = health
 
 func force_send_state():
 	if multiplayer.is_server():
 		_send_state()
+
+
+func _on_shoot_cooldown_timeout() -> void:
+	firePermission = true
+
+
+func _on_recarga_timeout() -> void:
+	bullet = 30
+	municao.text = str(bullet)+"/30"

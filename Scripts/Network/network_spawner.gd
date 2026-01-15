@@ -22,7 +22,6 @@ func _ready():
 		
 		# Spawna o player do próprio servidor (ID 1) apenas UMA vez
 		call_deferred("_spawn_player", 1)
-		call_deferred("_spawn_player", 2)
 
 func _on_peer_connected(id: int):
 	print("NetworkSpawner: Peer conectado, spawnando player para ID ", id)
